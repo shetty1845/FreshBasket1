@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from bcrypt import hashpw, gensalt, checkpw
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -18,29 +19,35 @@ def inject_now():
     return {'now': datetime.now()}
 
 # ============================================================================
-# AWS DYNAMODB SETUP (Real AWS Connection)
+# AWS DYNAMODB SETUP
 # ============================================================================
 
 print("\n" + "="*70)
 print("🗄️  Connecting to AWS DynamoDB...")
 print("="*70)
 
-# Initialize DynamoDB with AWS credentials
-dynamodb = boto3.resource(
-    'dynamodb',
-    region_name=os.getenv('AWS_REGION', 'ap-south-1'),
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-)
+# Initialize DynamoDB
+try:
+    dynamodb = boto3.resource(
+        'dynamodb',
+        region_name=os.getenv('AWS_REGION', 'ap-south-1'),
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    )
 
-dynamodb_client = boto3.client(
-    'dynamodb',
-    region_name=os.getenv('AWS_REGION', 'ap-south-1'),
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-)
+    dynamodb_client = boto3.client(
+        'dynamodb',
+        region_name=os.getenv('AWS_REGION', 'ap-south-1'),
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    )
+    
+    print("✅ Connected to AWS DynamoDB successfully!")
+    print(f"📍 Region: {os.getenv('AWS_REGION', 'ap-south-1')}")
+except Exception as e:
+    print(f"❌ Error connecting to DynamoDB: {e}")
+    exit(1)
 
-print("✅ Connected to AWS DynamoDB successfully!")
 print("="*70 + "\n")
 
 # ============================================================================
@@ -151,82 +158,113 @@ def create_tables_if_not_exists():
     """Create DynamoDB tables if they don't exist"""
     print("📦 Checking/Creating DynamoDB tables...")
     
-    existing_tables = dynamodb_client.list_tables()['TableNames']
+    try:
+        existing_tables = dynamodb_client.list_tables()['TableNames']
+        print(f"📋 Existing tables: {existing_tables}")
+    except Exception as e:
+        print(f"❌ Error listing tables: {e}")
+        return
     
     # Create Products Table
     if 'FreshBasket_Products' not in existing_tables:
-        print("Creating Products table...")
-        dynamodb.create_table(
-            TableName='FreshBasket_Products',
-            KeySchema=[{'AttributeName': 'product_id', 'KeyType': 'HASH'}],
-            AttributeDefinitions=[{'AttributeName': 'product_id', 'AttributeType': 'S'}],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        print("✅ Products table created")
+        print("Creating FreshBasket_Products table...")
+        try:
+            dynamodb.create_table(
+                TableName='FreshBasket_Products',
+                KeySchema=[{'AttributeName': 'product_id', 'KeyType': 'HASH'}],
+                AttributeDefinitions=[{'AttributeName': 'product_id', 'AttributeType': 'S'}],
+                BillingMode='PAY_PER_REQUEST'
+            )
+            print("✅ FreshBasket_Products table created")
+        except Exception as e:
+            print(f"❌ Error creating Products table: {e}")
+    else:
+        print("✅ FreshBasket_Products table already exists")
     
     # Create Users Table
     if 'FreshBasket_Users' not in existing_tables:
-        print("Creating Users table...")
-        dynamodb.create_table(
-            TableName='FreshBasket_Users',
-            KeySchema=[{'AttributeName': 'email', 'KeyType': 'HASH'}],
-            AttributeDefinitions=[{'AttributeName': 'email', 'AttributeType': 'S'}],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        print("✅ Users table created")
+        print("Creating FreshBasket_Users table...")
+        try:
+            dynamodb.create_table(
+                TableName='FreshBasket_Users',
+                KeySchema=[{'AttributeName': 'email', 'KeyType': 'HASH'}],
+                AttributeDefinitions=[{'AttributeName': 'email', 'AttributeType': 'S'}],
+                BillingMode='PAY_PER_REQUEST'
+            )
+            print("✅ FreshBasket_Users table created")
+        except Exception as e:
+            print(f"❌ Error creating Users table: {e}")
+    else:
+        print("✅ FreshBasket_Users table already exists")
     
     # Create Cart Table
     if 'FreshBasket_Cart' not in existing_tables:
-        print("Creating Cart table...")
-        dynamodb.create_table(
-            TableName='FreshBasket_Cart',
-            KeySchema=[
-                {'AttributeName': 'user_email', 'KeyType': 'HASH'},
-                {'AttributeName': 'product_id', 'KeyType': 'RANGE'}
-            ],
-            AttributeDefinitions=[
-                {'AttributeName': 'user_email', 'AttributeType': 'S'},
-                {'AttributeName': 'product_id', 'AttributeType': 'S'}
-            ],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        print("✅ Cart table created")
+        print("Creating FreshBasket_Cart table...")
+        try:
+            dynamodb.create_table(
+                TableName='FreshBasket_Cart',
+                KeySchema=[
+                    {'AttributeName': 'user_email', 'KeyType': 'HASH'},
+                    {'AttributeName': 'product_id', 'KeyType': 'RANGE'}
+                ],
+                AttributeDefinitions=[
+                    {'AttributeName': 'user_email', 'AttributeType': 'S'},
+                    {'AttributeName': 'product_id', 'AttributeType': 'S'}
+                ],
+                BillingMode='PAY_PER_REQUEST'
+            )
+            print("✅ FreshBasket_Cart table created")
+        except Exception as e:
+            print(f"❌ Error creating Cart table: {e}")
+    else:
+        print("✅ FreshBasket_Cart table already exists")
     
     # Create Orders Table
     if 'FreshBasket_Orders' not in existing_tables:
-        print("Creating Orders table...")
-        dynamodb.create_table(
-            TableName='FreshBasket_Orders',
-            KeySchema=[{'AttributeName': 'order_id', 'KeyType': 'HASH'}],
-            AttributeDefinitions=[{'AttributeName': 'order_id', 'AttributeType': 'S'}],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        print("✅ Orders table created")
+        print("Creating FreshBasket_Orders table...")
+        try:
+            dynamodb.create_table(
+                TableName='FreshBasket_Orders',
+                KeySchema=[{'AttributeName': 'order_id', 'KeyType': 'HASH'}],
+                AttributeDefinitions=[{'AttributeName': 'order_id', 'AttributeType': 'S'}],
+                BillingMode='PAY_PER_REQUEST'
+            )
+            print("✅ FreshBasket_Orders table created")
+        except Exception as e:
+            print(f"❌ Error creating Orders table: {e}")
+    else:
+        print("✅ FreshBasket_Orders table already exists")
     
     # Create Contact Messages Table
     if 'FreshBasket_ContactMessages' not in existing_tables:
-        print("Creating Contact Messages table...")
-        dynamodb.create_table(
-            TableName='FreshBasket_ContactMessages',
-            KeySchema=[{'AttributeName': 'message_id', 'KeyType': 'HASH'}],
-            AttributeDefinitions=[{'AttributeName': 'message_id', 'AttributeType': 'S'}],
-            BillingMode='PAY_PER_REQUEST'
-        )
-        print("✅ Contact Messages table created")
+        print("Creating FreshBasket_ContactMessages table...")
+        try:
+            dynamodb.create_table(
+                TableName='FreshBasket_ContactMessages',
+                KeySchema=[{'AttributeName': 'message_id', 'KeyType': 'HASH'}],
+                AttributeDefinitions=[{'AttributeName': 'message_id', 'AttributeType': 'S'}],
+                BillingMode='PAY_PER_REQUEST'
+            )
+            print("✅ FreshBasket_ContactMessages table created")
+        except Exception as e:
+            print(f"❌ Error creating ContactMessages table: {e}")
+    else:
+        print("✅ FreshBasket_ContactMessages table already exists")
     
     print("✅ All tables ready!")
     print("="*70 + "\n")
 
 def seed_products():
     """Seed products if table is empty"""
-    products_table = dynamodb.Table('FreshBasket_Products')
-    
     try:
+        products_table = dynamodb.Table('FreshBasket_Products')
         response = products_table.scan(Limit=1)
+        
         if response['Count'] == 0:
             print("🌱 Seeding 30 products...")
-            for product in PRODUCTS:
-                products_table.put_item(Item=product)
+            with products_table.batch_writer() as batch:
+                for product in PRODUCTS:
+                    batch.put_item(Item=product)
             print(f"✅ Successfully seeded {len(PRODUCTS)} products!")
         else:
             print("✅ Products already exist in database")
@@ -236,19 +274,26 @@ def seed_products():
 # Initialize tables
 try:
     create_tables_if_not_exists()
-    # Wait for tables to be active
-    import time
-    time.sleep(2)
+    print("⏳ Waiting for tables to be active...")
+    time.sleep(3)
     seed_products()
 except Exception as e:
-    print(f"⚠️  Warning: {e}")
+    print(f"⚠️  Initialization error: {e}")
 
-# DynamoDB Tables
+# Initialize table references AFTER creation
 users_table = dynamodb.Table('FreshBasket_Users')
 products_table = dynamodb.Table('FreshBasket_Products')
 orders_table = dynamodb.Table('FreshBasket_Orders')
 cart_table = dynamodb.Table('FreshBasket_Cart')
 contact_messages_table = dynamodb.Table('FreshBasket_ContactMessages')
+
+print(f"📊 Table references initialized:")
+print(f"   - Users: {users_table.table_name}")
+print(f"   - Products: {products_table.table_name}")
+print(f"   - Cart: {cart_table.table_name}")
+print(f"   - Orders: {orders_table.table_name}")
+print(f"   - Contact: {contact_messages_table.table_name}")
+print("="*70 + "\n")
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -265,7 +310,7 @@ def get_all_products():
             p['id'] = int(p['product_id'])
         return products
     except Exception as e:
-        print(f"Error getting products: {e}")
+        print(f"❌ Error getting products: {e}")
         return []
 
 def get_product_by_id(product_id):
@@ -275,7 +320,8 @@ def get_product_by_id(product_id):
         if product:
             product['id'] = int(product['product_id'])
         return product
-    except:
+    except Exception as e:
+        print(f"❌ Error getting product: {e}")
         return None
 
 def get_user_cart(user_email):
@@ -285,7 +331,8 @@ def get_user_cart(user_email):
         for item in items:
             item['id'] = int(item['product_id'])
         return items
-    except:
+    except Exception as e:
+        print(f"❌ Error getting cart: {e}")
         return []
 
 def init_cart():
@@ -330,37 +377,52 @@ def register():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         
+        print(f"\n🔍 Registration attempt for: {email}")
+        print(f"📝 Using table: {users_table.table_name}")
+        
         if password != confirm_password:
             flash("Passwords don't match!", "danger")
             return redirect(url_for('register'))
         
+        # Check if user exists
         try:
             response = users_table.get_item(Key={'email': email})
             if 'Item' in response:
-                flash("User already exists!", "info")
+                print(f"⚠️  User {email} already exists")
+                flash("User already exists! Please login.", "info")
                 return redirect(url_for('login'))
-        except:
-            pass
+        except Exception as e:
+            print(f"⚠️  Error checking existing user: {e}")
         
+        # Hash password
         hashed = hashpw(password.encode('utf-8'), gensalt()).decode('utf-8')
         
+        # Create user data
+        user_data = {
+            'email': email,
+            'name': name,
+            'password': hashed,
+            'phone': request.form.get('phone', ''),
+            'address': request.form.get('address', ''),
+            'user_type': 'customer',
+            'registration_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'total_orders': 0,
+            'total_spent': 0
+        }
+        
+        # Save to DynamoDB
         try:
-            users_table.put_item(Item={
-                'email': email,
-                'name': name,
-                'password': hashed,
-                'phone': request.form.get('phone', ''),
-                'address': request.form.get('address', ''),
-                'user_type': 'customer',
-                'registration_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'total_orders': 0,
-                'total_spent': 0
-            })
+            print(f"💾 Saving user to {users_table.table_name}...")
+            users_table.put_item(Item=user_data)
+            print(f"✅ User {email} registered successfully!")
+            
             flash("Registration successful! Please login.", "success")
             return redirect(url_for('login'))
         except Exception as e:
+            print(f"❌ Registration error: {e}")
+            import traceback
+            traceback.print_exc()
             flash(f"Registration failed: {str(e)}", "danger")
-            print(f"Registration error: {e}")
             return redirect(url_for('register'))
     
     return render_template('register.html', is_logged_in=is_logged_in())
@@ -371,35 +433,48 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
+        print(f"\n🔍 Login attempt for: {email}")
+        print(f"📝 Using table: {users_table.table_name}")
+        
         try:
             response = users_table.get_item(Key={'email': email})
             user = response.get('Item')
             
             if not user:
-                flash("User not found!", "danger")
+                print(f"❌ User {email} not found")
+                flash("User not found! Please register first.", "danger")
                 return redirect(url_for('login'))
             
+            print(f"✅ User {email} found in database")
+            
             if not checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+                print(f"❌ Invalid password for {email}")
                 flash("Invalid password!", "danger")
                 return redirect(url_for('login'))
             
+            # Login successful
             session['user_email'] = email
             session['user_name'] = user['name']
             session['user_type'] = user.get('user_type', 'customer')
             
+            print(f"✅ Login successful for {email}")
             flash(f"Welcome back, {user['name']}!", "success")
             return redirect(url_for('index'))
+            
         except Exception as e:
+            print(f"❌ Login error: {e}")
+            import traceback
+            traceback.print_exc()
             flash(f"Login failed: {str(e)}", "danger")
-            print(f"Login error: {e}")
             return redirect(url_for('login'))
     
     return render_template('login.html', is_logged_in=is_logged_in())
 
 @app.route('/logout')
 def logout():
+    user_name = session.get('user_name', 'User')
     session.clear()
-    flash("Logged out successfully!", "info")
+    flash(f"Goodbye {user_name}! Logged out successfully.", "info")
     return redirect(url_for('index'))
 
 @app.route('/cart')
@@ -443,7 +518,7 @@ def add_to_cart():
                 })
             return jsonify({'success': True})
         except Exception as e:
-            print(f"Add to cart error: {e}")
+            print(f"❌ Add to cart error: {e}")
             return jsonify({'success': False, 'message': str(e)})
     else:
         cart = session.get('cart', [])
@@ -473,6 +548,7 @@ def remove_from_cart():
             cart_table.delete_item(Key={'user_email': session['user_email'], 'product_id': product_id})
             return jsonify({'success': True})
         except Exception as e:
+            print(f"❌ Remove from cart error: {e}")
             return jsonify({'success': False, 'message': str(e)})
     else:
         cart = [i for i in session.get('cart', []) if i['id'] != int(product_id)]
@@ -491,7 +567,7 @@ def generate_recipe():
     data = request.json
     ingredients = data.get('ingredients', [])
     if not ingredients:
-        return jsonify({'success': False, 'message': 'Select ingredients'})
+        return jsonify({'success': False, 'message': 'Please select ingredients'})
     
     recipe = {
         'name': f'🥗 {" & ".join(ingredients)} Recipe',
@@ -499,7 +575,13 @@ def generate_recipe():
         'difficulty': 'Easy',
         'servings': '3-4',
         'ingredients_list': [f'{i} - 200g' for i in ingredients],
-        'instructions': ['Wash all ingredients', 'Chop into pieces', 'Cook or mix', 'Season to taste', 'Serve hot or cold'],
+        'instructions': [
+            'Wash all ingredients thoroughly',
+            'Chop into desired pieces',
+            'Cook or mix as needed',
+            'Season to taste',
+            'Serve hot or cold'
+        ],
         'tips': 'Fresh ingredients make the best dishes!'
     }
     return jsonify({'success': True, 'recipe': recipe})
@@ -514,10 +596,13 @@ def contact():
                 'email': request.form['email'],
                 'subject': request.form['subject'],
                 'message': request.form['message'],
-                'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'status': 'new'
             })
-            flash("Message sent successfully!", "success")
+            print(f"✅ Contact message saved from {request.form['email']}")
+            flash("Message sent successfully! We'll get back to you soon.", "success")
         except Exception as e:
+            print(f"❌ Contact message error: {e}")
             flash(f"Error sending message: {str(e)}", "danger")
         return redirect(url_for('contact'))
     return render_template('contact.html', is_logged_in=is_logged_in())
@@ -533,6 +618,7 @@ def profile():
         user = response.get('Item', {})
         return render_template('profile.html', user=user, recent_orders=[], is_logged_in=is_logged_in())
     except Exception as e:
+        print(f"❌ Profile error: {e}")
         flash(f"Error loading profile: {str(e)}", "danger")
         return redirect(url_for('index'))
 
@@ -556,8 +642,10 @@ def update_profile():
         )
         
         session['user_name'] = name
+        print(f"✅ Profile updated for {user_email}")
         flash("Profile updated successfully!", "success")
     except Exception as e:
+        print(f"❌ Profile update error: {e}")
         flash(f"Error updating profile: {str(e)}", "danger")
     
     return redirect(url_for('profile'))
@@ -572,9 +660,68 @@ def my_orders():
 @app.route('/admin')
 def admin_dashboard():
     if not is_logged_in() or session.get('user_type') != 'admin':
-        flash("Access denied!", "danger")
+        flash("Access denied! Admin only.", "danger")
         return redirect(url_for('index'))
     return render_template('admin_dashboard.html', is_logged_in=is_logged_in())
+
+# ============================================================================
+# DEBUG ROUTES (Remove in production)
+# ============================================================================
+
+@app.route('/debug/tables')
+def debug_tables():
+    """Debug route to check table configuration"""
+    try:
+        all_tables = dynamodb_client.list_tables()['TableNames']
+        info = {
+            'all_tables_in_aws': all_tables,
+            'app_table_references': {
+                'users': users_table.table_name,
+                'products': products_table.table_name,
+                'cart': cart_table.table_name,
+                'orders': orders_table.table_name,
+                'contact': contact_messages_table.table_name
+            },
+            'region': os.getenv('AWS_REGION', 'ap-south-1')
+        }
+        return jsonify(info)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug/users')
+def debug_users():
+    """Debug route to see all users"""
+    try:
+        response = users_table.scan()
+        users = response.get('Items', [])
+        # Remove passwords from output
+        for user in users:
+            user.pop('password', None)
+        return jsonify({
+            'count': len(users),
+            'users': users,
+            'table_name': users_table.table_name
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug/products')
+def debug_products():
+    """Debug route to see all products"""
+    try:
+        response = products_table.scan()
+        products = response.get('Items', [])
+        return jsonify({
+            'count': len(products),
+            'products': products[:5],  # First 5 only
+            'table_name': products_table.table_name
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================================
+# ERROR HANDLERS
+# ============================================================================
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -582,7 +729,12 @@ def page_not_found(e):
 
 @app.errorhandler(500)
 def server_error(e):
+    print(f"❌ Server error: {e}")
     return render_template('500.html', is_logged_in=is_logged_in()), 500
+
+# ============================================================================
+# RUN APPLICATION
+# ============================================================================
 
 if __name__ == '__main__':
     print("\n" + "="*70)
@@ -591,6 +743,10 @@ if __name__ == '__main__':
     print("✨ Running with AWS DynamoDB")
     print("💾 Data persisted in AWS Cloud")
     print("📍 http://127.0.0.1:5000")
+    print("\n🔍 Debug routes available:")
+    print("   - http://127.0.0.1:5000/debug/tables")
+    print("   - http://127.0.0.1:5000/debug/users")
+    print("   - http://127.0.0.1:5000/debug/products")
     print("="*70 + "\n")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
