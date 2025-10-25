@@ -1,0 +1,17 @@
+Flask
+python-dotenv
+torch
+transformers
+accelerate
+sentencepiece
+protobuf
+torchaudio
+soundfile
+librosa
+Flask
+python-dotenv
+gTTS
+Flask
+boto3
+bcrypt
+python-dotenv

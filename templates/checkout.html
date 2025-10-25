@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="checkout-page container">
+    <h1 class="page-title">Checkout</h1>
+    
+    <form method="POST" action="{{ url_for('checkout') }}" class="checkout-form">
+        <div class="checkout-grid">
+            <div class="checkout-details">
+                <div class="checkout-section">
+                    <h2><i class="fas fa-map-marker-alt"></i> Delivery Information</h2>
+                    
+                    <div class="form-group">
+                        <label for="delivery_address">Delivery Address *</label>
+                        <textarea id="delivery_address" name="delivery_address" rows="4" required>{{ user.address if user.address else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" value="{{ user.phone if user.phone else '' }}" required>
+                    </div>
+                </div>
+                
+                <div class="checkout-section">
+                    <h2><i class="fas fa-credit-card"></i> Payment Method</h2>
+                    
+                    <div class="payment-options">
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="cod" checked>
+                            <div class="payment-card">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Cash on Delivery</span>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="online">
+                            <div class="payment-card">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Online Payment (Coming Soon)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="order-summary-section">
+                <div class="order-summary-card">
+                    <h2><i class="fas fa-receipt"></i> Order Summary</h2>
+                    
+                    <div class="order-items">
+                        {% for item in cart_items %}
+                        <div class="order-item">
+                            <img src="{{ item.image }}" alt="{{ item.name }}">
+                            <div class="order-item-details">
+                                <h4>{{ item.name }}</h4>
+                                <p>{{ item.quantity }} × ₹{{ item.price }}</p>
+                            </div>
+                            <span class="order-item-total">₹{{ item.price * item.quantity }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="order-totals">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery:</span>
+                            <span class="text-success">FREE</span>
+                        </div>
+                        <div class="summary-row total-row">
+                            <strong>Total:</strong>
+                            <strong class="total-amount">₹{{ total }}</strong>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-check-circle"></i> Place Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.checkout-page {
+    padding: 60px 20px;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.checkout-section {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.checkout-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.payment-options {
+    display: grid;
+    gap: 1rem;
+}
+
+.payment-option {
+    cursor: pointer;
+}
+
+.payment-option input[type="radio"] {
+    display: none;
+}
+
+.payment-card {
+    background: var(--dark-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s;
+}
+
+.payment-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.payment-option input[type="radio"]:checked + .payment-card {
+    border-color: var(--primary-color);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.payment-card:hover {
+    border-color: var(--primary-color);
+}
+
+.order-summary-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    position: sticky;
+    top: 100px;
+}
+
+.order-summary-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.order-items {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.order-item-details h4 {
+    margin-bottom: 0.25rem;
+}
+
+.order-item-details p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.order-item-total {
+    margin-left: auto;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.order-totals {
+    border-top: 2px solid var(--border-color);
+    padding-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.total-row {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.total-amount {
+    color: var(--primary-color);
+}
+
+.text-success {
+    color: var(--primary-color);
+}
+
+.btn-block {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 1024px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-summary-card {
+        position: static;
+    }
+}
+</style>
+{% endblock %}

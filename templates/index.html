@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Fresh & Organic</h1>
+            <h2>Fruits & Vegetables at Your Doorstep</h2>
+            <p>100% Fresh, Healthy, and Delivered Daily</p>
+            
+            <div class="hero-buttons">
+                <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-basket"></i> Shop Now
+                </a>
+                <a href="{{ url_for('ai_assistant') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-robot"></i> Try AI Assistant
+                </a>
+            </div>
+        </div>
+        
+        <!-- Feature Cards -->
+        <div class="feature-cards">
+            <div class="feature-card">
+                <i class="fas fa-truck"></i>
+                <h3>Free Delivery</h3>
+                <p>On orders above ₹500</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-leaf"></i>
+                <h3>100% Organic</h3>
+                <p>Fresh from farms</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Quality Assured</h3>
+                <p>Best quality products</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-robot"></i>
+                <h3>AI Powered</h3>
+                <p>Smart recommendations</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">Featured Products</h2>
+        
+        {% if products and products|length > 0 %}
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ product.image }}" alt="{{ product.name }}">
+                    <span class="product-badge">{{ product.category }}</span>
+                </div>
+                
+                <div class="product-info">
+                    <span class="product-category">{{ product.category }}</span>
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description }}</p>
+                    
+                    <div class="product-meta">
+                        <span class="product-stock">
+                            <i class="fas fa-box"></i> {{ product.stock }} {{ product.unit }} available
+                        </span>
+                        <div class="product-price">
+                            ₹{{ product.price }}<span class="unit">/{{ product.unit }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline btn-sm">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }}, 1)">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-basket"></i> View All Products
+            </a>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <h3>No Products Available</h3>
+            <p>We're currently setting up our inventory. Please check back soon!</p>
+            <a href="{{ url_for('index') }}/seed-products" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Load Sample Products
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card">
+            <i class="fas fa-robot"></i>
+            <h2>Need Help Choosing?</h2>
+            <p>Try our AI-powered shopping assistant for personalized recommendations and recipe ideas!</p>
+            <a href="{{ url_for('ai_assistant') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-magic"></i> Talk to AI Assistant
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Empty State Styles */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 2px dashed var(--border-color);
+    margin: 2rem 0;
+}
+
+.empty-state i {
+    font-size: 5rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 60px 20px;
+}
+
+.cta-card {
+    background: var(--gradient-card);
+    backdrop-filter: blur(10px);
+    padding: 4rem 2rem;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.cta-card i {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.cta-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.cta-card p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+</style>
+
+<script>
+function addToCart(productId, quantity) {
+    fetch('/add_to_cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showNotification('Product added to cart!', 'success');
+            // Update cart count
+            updateCartCount();
+        } else {
+            showNotification(data.message || 'Failed to add product', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', 'danger');
+    });
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = `
+        <span>${message}</span>
+        <button class="close-alert">&times;</button>
+    `;
+    
+    const container = document.querySelector('.flash-messages') || createFlashContainer();
+    container.appendChild(alertDiv);
+    
+    // Auto dismiss
+    setTimeout(() => {
+        alertDiv.style.animation = 'slideOutRight 0.5s ease';
+        setTimeout(() => alertDiv.remove(), 500);
+    }, 3000);
+    
+    // Close button
+    alertDiv.querySelector('.close-alert').addEventListener('click', function() {
+        alertDiv.style.animation = 'slideOutRight 0.5s ease';
+        setTimeout(() => alertDiv.remove(), 500);
+    });
+}
+
+function createFlashContainer() {
+    const container = document.createElement('div');
+    container.className = 'flash-messages';
+    document.body.appendChild(container);
+    return container;
+}
+
+function updateCartCount() {
+    // Update cart count in navigation
+    fetch('/cart')
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const cartCount = doc.querySelectorAll('.cart-item').length;
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+                cartCountElement.textContent = cartCount;
+            }
+        });
+}
+</script>
+{% endblock %}

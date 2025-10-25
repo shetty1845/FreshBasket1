@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="order-confirmation-page container">
+    <div class="confirmation-card">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        
+        <h1 class="success-title">Order Placed Successfully!</h1>
+        <p class="success-message">Thank you for your order. We'll deliver it to you soon!</p>
+        
+        <div class="order-details-card">
+            <h2><i class="fas fa-receipt"></i> Order Details</h2>
+            
+            <div class="order-info-grid">
+                <div class="info-item">
+                    <strong>Order ID:</strong>
+                    <span>{{ order.order_id }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Order Date:</strong>
+                    <span>{{ order.order_date }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Status:</strong>
+                    <span class="status-badge status-pending">{{ order.status }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Payment Method:</strong>
+                    <span>{{ order.payment_method.upper() }}</span>
+                </div>
+            </div>
+            
+            <div class="delivery-info">
+                <h3><i class="fas fa-map-marker-alt"></i> Delivery Address</h3>
+                <p>{{ order.delivery_address }}</p>
+                <p><i class="fas fa-phone"></i> {{ order.phone }}</p>
+            </div>
+            
+            <div class="order-items-section">
+                <h3><i class="fas fa-shopping-bag"></i> Ordered Items</h3>
+                {% for item in order.items %}
+                <div class="order-item">
+                    <img src="{{ item.image }}" alt="{{ item.name }}">
+                    <div class="item-details">
+                        <h4>{{ item.name }}</h4>
+                        <p>{{ item.quantity }} × ₹{{ item.price }} per {{ item.unit }}</p>
+                    </div>
+                    <span class="item-total">₹{{ item.price * item.quantity }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="order-total">
+                <strong>Total Amount:</strong>
+                <strong class="total-price">₹{{ order.total_amount }}</strong>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('my_orders') }}" class="btn btn-primary">
+                <i class="fas fa-box"></i> View All Orders
+            </a>
+            <a href="{{ url_for('products') }}" class="btn btn-secondary">
+                <i class="fas fa-shopping-basket"></i> Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.order-confirmation-page {
+    padding: 60px 20px;
+    min-height: 80vh;
+}
+
+.confirmation-card {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.success-icon {
+    text-align: center;
+    font-size: 5rem;
+    color: var(--primary-color);
+    animation: scaleIn 0.5s ease;
+}
+
+.success-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+.success-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.order-details-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.order-details-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.order-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-item strong {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-item span {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.delivery-info {
+    background: var(--dark-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.delivery-info h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.delivery-info p {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.order-items-section {
+    margin-bottom: 2rem;
+}
+
+.order-items-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    background: var(--dark-bg);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.order-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.item-details h4 {
+    margin-bottom: 0.25rem;
+}
+
+.item-details p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-total {
+    margin-left: auto;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.order-total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+    font-size: 1.5rem;
+}
+
+.total-price {
+    color: var(--primary-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ai-assistant-page">
+    <div class="container">
+        <div class="ai-header">
+            <h1><i class="fas fa-robot"></i> AI Recipe Generator</h1>
+            <p class="ai-subtitle">Create delicious recipes from fresh ingredients</p>
+        </div>
+        
+        <div class="recipe-generator-container">
+            <div class="ingredient-selection">
+                <h2><i class="fas fa-shopping-basket"></i> Select Your Ingredients</h2>
+                <p>Choose from our fresh products to generate a custom recipe</p>
+                
+                <div class="ingredients-grid">
+                    {% for product in products %}
+                    <label class="ingredient-card">
+                        <input type="checkbox" name="ingredients" value="{{ product.name }}" class="ingredient-checkbox">
+                        <div class="ingredient-content">
+                            <img src="{{ product.image }}" alt="{{ product.name }}">
+                            <div class="ingredient-info">
+                                <h3>{{ product.name }}</h3>
+                                <span class="ingredient-category">{{ product.category }}</span>
+                            </div>
+                            <div class="ingredient-checkmark">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                
+                <div class="generate-section">
+                    <button onclick="generateRecipe()" class="btn btn-primary btn-generate">
+                        <i class="fas fa-magic"></i> Generate Recipe
+                    </button>
+                    <button onclick="clearSelection()" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Clear Selection
+                    </button>
+                </div>
+            </div>
+            
+            <div class="recipe-display" id="recipeDisplay">
+                <div class="recipe-placeholder">
+                    <i class="fas fa-utensils"></i>
+                    <h3>Your Recipe Will Appear Here</h3>
+                    <p>Select ingredients and click "Generate Recipe" to get started!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function generateRecipe() {
+    const checkboxes = document.querySelectorAll('.ingredient-checkbox:checked');
+    const ingredients = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (ingredients.length === 0) {
+        showNotification('Please select at least one ingredient!', 'error');
+        return;
+    }
+    
+    const displayDiv = document.getElementById('recipeDisplay');
+    displayDiv.innerHTML = `
+        <div class="recipe-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Creating your perfect recipe...</p>
+        </div>
+    `;
+    
+    fetch('/generate_recipe', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ ingredients: ingredients })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayRecipe(data.recipe);
+        } else {
+            displayDiv.innerHTML = `<p class="error">${data.message}</p>`;
+        }
+    })
+    .catch(error => {
+        displayDiv.innerHTML = '<p class="error">Error generating recipe. Please try again.</p>';
+    });
+}
+
+function displayRecipe(recipe) {
+    const displayDiv = document.getElementById('recipeDisplay');
+    
+    const ingredientsList = recipe.ingredients_list.map(ing => 
+        `<li><i class="fas fa-check"></i> ${ing}</li>`
+    ).join('');
+    
+    const instructionsList = recipe.instructions.map((inst, idx) => 
+        `<li><span class="step-number">${idx + 1}</span> ${inst}</li>`
+    ).join('');
+    
+    displayDiv.innerHTML = `
+        <div class="recipe-card">
+            <div class="recipe-header">
+                <h2>${recipe.name}</h2>
+                <div class="recipe-meta">
+                    <span><i class="fas fa-clock"></i> ${recipe.time}</span>
+                    <span><i class="fas fa-signal"></i> ${recipe.difficulty}</span>
+                    <span><i class="fas fa-users"></i> ${recipe.servings}</span>
+                </div>
+            </div>
+            
+            <div class="recipe-body">
+                <div class="recipe-section">
+                    <h3><i class="fas fa-list"></i> Ingredients</h3>
+                    <ul class="ingredients-list">
+                        ${ingredientsList}
+                    </ul>
+                </div>
+                
+                <div class="recipe-section">
+                    <h3><i class="fas fa-tasks"></i> Instructions</h3>
+                    <ol class="instructions-list">
+                        ${instructionsList}
+                    </ol>
+                </div>
+                
+                <div class="recipe-tips">
+                    <h3><i class="fas fa-lightbulb"></i> Chef's Tip</h3>
+                    <p>${recipe.tips}</p>
+                </div>
+            </div>
+            
+            <div class="recipe-actions">
+                <button onclick="window.print()" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Print Recipe
+                </button>
+                <button onclick="shareRecipe()" class="btn btn-primary">
+                    <i class="fas fa-share"></i> Share
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Scroll to recipe
+    displayDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearSelection() {
+    document.querySelectorAll('.ingredient-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('recipeDisplay').innerHTML = `
+        <div class="recipe-placeholder">
+            <i class="fas fa-utensils"></i>
+            <h3>Your Recipe Will Appear Here</h3>
+            <p>Select ingredients and click "Generate Recipe" to get started!</p>
+        </div>
+    `;
+}
+
+function shareRecipe() {
+    showNotification('Recipe sharing feature coming soon!', 'success');
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

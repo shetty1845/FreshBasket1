@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="product-detail">
+    <div class="container">
+        <div class="product-detail-grid">
+            <div class="product-detail-image">
+                <img src="{{ product.image }}" alt="{{ product.name }}">
+                <span class="product-badge-large">{{ product.category }}</span>
+            </div>
+            
+            <div class="product-detail-info">
+                <h1>{{ product.name }}</h1>
+                <p class="product-detail-description">{{ product.description }}</p>
+                
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-tag"></i>
+                        <span>Category: <strong>{{ product.category }}</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-box"></i>
+                        <span>Stock: <strong>{{ product.stock }} {{ product.unit }}</strong></span>
+                    </div>
+                </div>
+                
+                <div class="product-price-section">
+                    <span class="price-label">Price:</span>
+                    <span class="price-value">₹{{ product.price }}</span>
+                    <span class="price-unit">/ {{ product.unit }}</span>
+                </div>
+                
+                <div class="quantity-selector">
+                    <label>Quantity:</label>
+                    <div class="quantity-controls">
+                        <button onclick="decrementQuantity()"><i class="fas fa-minus"></i></button>
+                        <input type="number" id="quantity" value="1" min="1" max="{{ product.stock }}">
+                        <button onclick="incrementQuantity()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                
+                <div class="product-actions">
+                    <button class="btn btn-primary btn-large" onclick="addToCartWithQuantity({{ product.id }})">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                    <a href="{{ url_for('products') }}" class="btn btn-secondary btn-large">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function incrementQuantity() {
+    const input = document.getElementById('quantity');
+    const max = parseInt(input.max);
+    if (parseInt(input.value) < max) {
+        input.value = parseInt(input.value) + 1;
+    }
+}
+
+function decrementQuantity() {
+    const input = document.getElementById('quantity');
+    if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+    }
+}
+
+function addToCartWithQuantity(productId) {
+    const quantity = parseInt(document.getElementById('quantity').value);
+    addToCart(productId, quantity);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="my-orders-page container">
+    <h1 class="page-title"><i class="fas fa-box"></i> My Orders</h1>
+    
+    {% if orders %}
+    <div class="orders-list">
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div class="order-header-left">
+                    <h3>Order #{{ order.order_id[:8] }}</h3>
+                    <p class="order-date">{{ order.order_date }}</p>
+                </div>
+                <div class="order-header-right">
+                    <span class="status-badge status-{{ order.status }}">{{ order.status }}</span>
+                    <p class="order-total">₹{{ order.total_amount }}</p>
+                </div>
+            </div>
+            
+            <div class="order-items-preview">
+                {% for item in order.items[:3] %}
+                <div class="order-item-preview">
+                    <img src="{{ item.image }}" alt="{{ item.name }}">
+                    <div>
+                        <p class="item-name">{{ item.name }}</p>
+                        <p class="item-quantity">Qty: {{ item.quantity }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if order.items|length > 3 %}
+                <p class="more-items">+{{ order.items|length - 3 }} more items</p>
+                {% endif %}
+            </div>
+            
+            <div class="order-footer">
+                <a href="{{ url_for('order_confirmation', order_id=order.order_id) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View Details
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-orders">
+        <i class="fas fa-box-open"></i>
+        <h2>No Orders Yet</h2>
+        <p>You haven't placed any orders yet. Start shopping now!</p>
+        <a href="{{ url_for('products') }}" class="btn btn-primary">
+            <i class="fas fa-shopping-basket"></i> Browse Products
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.my-orders-page {
+    padding: 60px 20px;
+    min-height: 80vh;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.orders-list {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.order-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-header h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.order-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.order-header-right {
+    text-align: right;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.status-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.status-completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary-color);
+}
+
+.status-cancelled {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+}
+
+.order-total {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.order-items-preview {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.order-item-preview {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    background: var(--dark-bg);
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+
+.order-item-preview img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.item-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.item-quantity {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.more-items {
+    color: var(--text-secondary);
+    font-style: italic;
+    align-self: center;
+}
+
+.order-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.empty-orders {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-orders i {
+    font-size: 5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-orders h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.empty-orders p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .order-header-right {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}

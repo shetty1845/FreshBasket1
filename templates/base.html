@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshBasket - Fresh Fruits & Vegetables</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <i class="fas fa-leaf"></i>
+                <span>FreshBasket</span>
+            </a>
+            
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a></li>
+                
+                <li class="dropdown">
+                    <a href="{{ url_for('products') }}">
+                        <i class="fas fa-shopping-basket"></i> Products
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('products', category='fruits') }}">
+                            <i class="fas fa-apple-alt"></i> Fruits
+                        </a></li>
+                        <li><a href="{{ url_for('products', category='vegetables') }}">
+                            <i class="fas fa-carrot"></i> Vegetables
+                        </a></li>
+                    </ul>
+                </li>
+                
+                <li><a href="{{ url_for('ai_assistant') }}">
+                    <i class="fas fa-robot"></i> AI Assistant
+                </a></li>
+                
+                {% if is_logged_in %}
+                    <li class="dropdown">
+                        <a href="#">
+                            <i class="fas fa-user-circle"></i> {{ session.user_name }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('profile') }}">
+                                <i class="fas fa-user"></i> My Profile
+                            </a></li>
+                            <li><a href="{{ url_for('my_orders') }}">
+                                <i class="fas fa-box"></i> My Orders
+                            </a></li>
+                            {% if session.user_type == 'admin' %}
+                            <li><a href="{{ url_for('admin_dashboard') }}">
+                                <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+                            </a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a></li>
+                    <li><a href="{{ url_for('register') }}">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a></li>
+                {% endif %}
+                
+                <li>
+                    <a href="{{ url_for('cart') }}" class="cart-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cartCount">
+                            {% if is_logged_in %}
+                                0
+                            {% else %}
+                                {{ session.cart|length if session.cart else 0 }}
+                            {% endif %}
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="close-alert">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-leaf"></i> FreshBasket</h3>
+                    <p>Your trusted source for fresh fruits and vegetables, delivered with care to your doorstep.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('products') }}">Products</a></li>
+                        <li><a href="{{ url_for('ai_assistant') }}">AI Assistant</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="{{ url_for('products', category='fruits') }}">Fruits</a></li>
+                        <li><a href="{{ url_for('products', category='vegetables') }}">Vegetables</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Connect With Us</h4>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 FreshBasket. All rights reserved. Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i> for fresh food lovers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script>
+        // Auto-dismiss flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close alert buttons
+            document.querySelectorAll('.close-alert').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.parentElement.style.animation = 'slideOutRight 0.5s ease';
+                    setTimeout(() => {
+                        this.parentElement.remove();
+                    }, 500);
+                });
+            });
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    alert.style.animation = 'slideOutRight 0.5s ease';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+        });
+    </script>
+    
+    <style>
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>
